@@ -134,10 +134,10 @@ Minimized disk I/O
 ![Physical plan_groupby](./image/g.png)
 
 ### 2. Query Details
-![Query Details](./images/q.png)
+![Query Details](./image/q.png)
 
 ### 3. Successful Writes
-![Successful writes](./images/s.png)
+![Successful writes](./image/s.png)
 
 ---
 
