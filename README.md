@@ -1,45 +1,154 @@
-# Databricks_Pyspark-Demo
+# 🚀 Databricks PySpark Demo
 
-### COVID-19 Spark Pipeline
-Dataset Description
-Source: Databricks COVID-19 public dataset​
-Format: CSV files with daily COVID-19 counts by state and county
-Columns include: date, county, state, cases, deaths, and fips
-Rows: 1,227,256
+> COVID-19 Data Analysis Pipeline using Apache Spark
 
-### Pipeline & Analysis Summary
-Spark pipeline covers: data cleaning, filtering, group-by aggregations, derived columns, and efficient data writing. Filters are applied early to minimize scan cost. Data types are explicitly cast and malformed values (non-integer deaths) are handled gracefully. Final results are written in Delta format for optimized downstream use.
+## 📊 Dataset Description
 
-### Core Steps
-1. Read & Inspect: Load CSV, display schema, show row count and preview data.
-2. Cleaning & Type Casting: Use withColumn and when/rlike to cast date, cases, and deaths precisely. Non-integer deaths are set to NULL for downstream compatibility.
-3. Early Filtering: Filter out rows with nulls in critical columns (cases, deaths). Only rows with complete data are processed—which speeds up subsequent steps and reduces shuffle cost.
-4. Aggregation: State-level death summaries and averages via groupBy and agg (count, sum, avg).
-5. Write-out: Save results to Delta table, enabling fast re-access and ACID guarantees.
+| Property | Details |
+|----------|---------|
+| **Source** | Databricks COVID-19 Public Dataset |
+| **Format** | CSV files with daily COVID-19 counts |
+| **Scope** | State and County level data |
+| **Total Rows** | 1,227,256 |
 
-### Performance Analysis
-**How Spark Optimized**
-Pushed projections and filters down to file scans, performed early predicate evaluation (e.g., state IS NOT NULL), and used Photon's vectorized, columnar operators (PhotonGroupingAgg, PhotonShuffledHashJoin) for faster processing.
-**Where Filters Pushed Down**
-Filters were pushed down to the FileScan stage, resulting in filtering before data was loaded or moved downstream, which minimized disk I/O.
-**Performance Bottlenecks**
-The primary bottleneck was the Shuffle stage triggered by GroupBy and Join operations, along with associated shuffle cost and data skew.
-**Pipeline Optimization**
-1. Filter Ordering: Implemented a "filter early" strategy to reduce data volume before expensive shuffles/aggregations
-2. Column Pruning: Read only referenced columns during FileScan to cut I/O
-3. Shuffle Control: Set spark.sql.shuffle.partitions = 10 and repartitioned by key (state) to reduce skew/cost
-4. Output: Wrote to Parquet partitioned by year to speed up time-based reads
+**Schema:**
+```
+- date: Date of record
+- county: County name
+- state: State abbreviation
+- cases: Number of COVID-19 cases
+- deaths: Number of deaths
+- fips: Federal Information Processing Standards code
+```
 
-### Key Finding
-- Earliest COVID-19 county entries appear in WA/IL/CA in late January 2020; New York counties rise sharply in early March.
-- After correcting for cumulative time series (latest row per county), state-level totals are consistent with rollups from the underlying county data.
-- Partitioning by year improves time-bounded scans, and repartitioning by state reduces shuffle contention for state-keyed joins/aggregations.
+---
 
-### Screeshot 
-1. Physical plan:
-  ![Physical plan_filtered](/Users/otting/Desktop/g.png)
-  ![Physical plan_groupby](/Users/otting/Desktop/f.png)
-2. Query details:
-  ![Query Details](/Users/otting/Desktop/q.png)
-3. Successful writes:
-  ![Successful writes](/Users/otting/Desktop/s.png)
+## 🎯 Pipeline & Analysis Summary
+
+This Spark pipeline demonstrates **comprehensive data engineering best practices**:
+
+- ✅ Data cleaning and validation
+- ✅ Early filtering for cost optimization
+- ✅ Explicit type casting with error handling
+- ✅ Efficient group-by aggregations
+- ✅ Delta Lake format for ACID compliance
+
+The pipeline handles malformed values gracefully (e.g., non-integer deaths → `NULL`) and applies filters early to minimize scan costs.
+
+---
+
+## 🔧 Core Pipeline Steps
+
+### 1️⃣ Read & Inspect
+- Load CSV data
+- Display schema and row count
+- Preview sample records
+
+### 2️⃣ Cleaning & Type Casting
+```python
+withColumn() + when() / rlike()
+```
+- Cast `date`, `cases`, and `deaths` with precision
+- Set non-integer deaths to `NULL` for compatibility
+
+### 3️⃣ Early Filtering
+- Remove rows with `NULL` in critical columns (`cases`, `deaths`)
+- Process only complete records
+- **Result:** Faster processing + reduced shuffle cost
+
+### 4️⃣ Aggregation
+```python
+groupBy() + agg(count, sum, avg)
+```
+- State-level death summaries
+- Calculate averages and totals
+
+### 5️⃣ Write-out
+- Save to **Delta Lake** format
+- Enable fast re-access and ACID guarantees
+
+---
+
+## ⚡ Performance Analysis
+
+### 🎨 How Spark Optimized
+
+| Optimization | Description |
+|--------------|-------------|
+| **Predicate Pushdown** | Filters pushed to FileScan (e.g., `state IS NOT NULL`) |
+| **Projection Pushdown** | Only required columns read from source |
+| **Photon Engine** | Vectorized operators: `PhotonGroupingAgg`, `PhotonShuffledHashJoin` |
+
+### 📍 Filter Pushdown Flow
+```
+FileScan Stage
+    ↓
+Filter before data loading
+    ↓
+Minimized disk I/O
+```
+
+### 🚨 Performance Bottlenecks
+
+- ⚠️ **Primary Issue:** Shuffle stage triggered by `GroupBy` and `Join` operations
+- ⚠️ **Secondary Issues:** Data skew and shuffle cost
+
+---
+
+## 🛠️ Pipeline Optimizations
+
+| # | Strategy | Implementation | Benefit |
+|---|----------|----------------|---------|
+| 1 | **Filter Ordering** | "Filter early" strategy | Reduce data volume before shuffles |
+| 2 | **Column Pruning** | Read only referenced columns | Cut I/O overhead |
+| 3 | **Shuffle Control** | `spark.sql.shuffle.partitions = 10`<br/>Repartition by `state` | Reduce skew/cost |
+| 4 | **Output Format** | Parquet partitioned by `year` | Speed up time-based queries |
+
+---
+
+## 🔍 Key Findings
+
+### 📅 Timeline Insights
+- **Late January 2020:** Earliest COVID-19 county entries in WA, IL, CA
+- **Early March 2020:** Sharp increases in New York counties
+
+### ✅ Data Quality
+- After correcting for cumulative time series (latest row per county):
+  - State-level totals **consistent** with county-level rollups
+  - Data integrity **validated**
+
+### 📈 Performance Benefits
+- ✨ **Partitioning by year** → Improved time-bounded scans
+- ✨ **Repartitioning by state** → Reduced shuffle contention
+
+---
+
+## 📸 Screenshots
+
+### 1. Physical Plan
+
+#### Filtered Operations
+![Physical plan_filtered](./images/f.png)
+
+#### GroupBy Operations
+![Physical plan_groupby](./images/g.png)
+
+### 2. Query Details
+![Query Details](./images/q.png)
+
+### 3. Successful Writes
+![Successful writes](./images/s.png)
+
+---
+
+## 🏆 Tech Stack
+
+- Apache Spark
+- Databricks
+- PySpark
+- Delta Lake
+- Photon Engine
+
+---
+
+**⭐ Star this repo if you found it helpful!**
