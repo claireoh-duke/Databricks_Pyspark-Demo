@@ -128,10 +128,10 @@ Minimized disk I/O
 ### 1. Physical Plan
 
 #### Filtered Operations
-![Physical plan_filtered](./images/f.png)
+![Physical plan_filtered](image/f.png)
 
 #### GroupBy Operations
-![Physical plan_groupby](./images/g.png)
+![Physical plan_groupby](./image/g.png)
 
 ### 2. Query Details
 ![Query Details](./images/q.png)
